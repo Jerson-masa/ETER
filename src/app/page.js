@@ -24,7 +24,7 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center pt-8">
-          <Link href="/consulta" className="btn-primary no-underline text-black">
+          <Link href="/login" className="btn-primary no-underline text-black">
             Iniciar Consulta
           </Link>
           <button className="px-8 py-3 rounded-full border border-gray-700 text-gray-300 hover:bg-white/5 transition-all uppercase tracking-wider text-sm font-medium">
