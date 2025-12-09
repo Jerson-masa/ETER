@@ -1,11 +1,21 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import Groq from "groq-sdk";
 import { calculateZodiacSign, calculateLifePathNumber } from '@/utils/esoteric';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 export async function POST(request) {
     try {
+        // Check if Supabase is configured
+        if (!isSupabaseConfigured() || !supabase) {
+            return Response.json({ error: 'Servicio no disponible' }, { status: 503 });
+        }
+
+        // Check if Groq API key is configured
+        if (!process.env.GROQ_API_KEY) {
+            return Response.json({ error: 'API no configurada' }, { status: 503 });
+        }
+
+        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
         const { userId, question, userName, birthDate } = await request.json();
 
         if (!userId) {
@@ -27,7 +37,7 @@ export async function POST(request) {
             return Response.json({ error: 'Créditos insuficientes' }, { status: 403 });
         }
 
-        // 2. Calcular datos esotéricos (si no vienen en el request, idealmente leemos de DB, pero calculamos aquí por robustez)
+        // 2. Calcular datos esotéricos
         const dateObj = new Date(birthDate);
         const zodiac = calculateZodiacSign(dateObj);
         const lifePath = calculateLifePathNumber(dateObj);
@@ -57,8 +67,7 @@ export async function POST(request) {
 
         const answer = completion.choices[0]?.message?.content || "El cosmos está nublado hoy...";
 
-        // 5. Deducción de Créditos y Guardado (Transacción)
-        // Hacemos esto 'optimista' o en transacción real si Supabase RPC lo permite, aquí paso a paso.
+        // 5. Deducción de Créditos y Guardado
         const newCredits = user.current_credits - 5;
 
         const { error: updateError } = await supabase
@@ -68,7 +77,6 @@ export async function POST(request) {
 
         if (updateError) {
             console.error('Error actualizando créditos', updateError);
-            // En producción, manejar rollback o cola de reintento
         }
 
         // 6. Guardar Consulta

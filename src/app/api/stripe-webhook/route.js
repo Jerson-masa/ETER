@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 // import Stripe from 'stripe'; 
 // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -7,6 +7,11 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request) {
     try {
+        // Check if Supabase is configured
+        if (!isSupabaseConfigured() || !supabase) {
+            return Response.json({ error: 'Servicio no disponible' }, { status: 503 });
+        }
+
         const body = await request.text();
         // const sig = request.headers.get('stripe-signature');
 
